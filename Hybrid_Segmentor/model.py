@@ -350,7 +350,9 @@ class TransformerSegmentor(pl.LightningModule):
     def forward(self, x):
         mit_outputs = self.mix_transformer(x)[-1]  # Use the last stage output
         to_segment = self.to_segment_conv(mit_outputs)
-        return to_segment
+        # Resize output to match input size
+        to_segment_resized = F.interpolate(to_segment, size=x.shape[2:], mode="bilinear", align_corners=True)
+        return to_segment_resized
 
     def training_step(self, batch, batch_idx):
         x, y = batch

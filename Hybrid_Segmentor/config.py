@@ -7,6 +7,7 @@ DATASET_SIZE = {'train' : 4800, 'val' : 600, 'test' : 600}
 # dataset = "/kaggle/input/crackvision6000/split_dataset_6000/"
 
 dataset = "/kaggle/input/crackvision12k/split_dataset_final/"
+#dataset = "C/Users/minhn/Downloads/split_dataset_final/"
 
 LEARNING_RATE = 1e-4
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

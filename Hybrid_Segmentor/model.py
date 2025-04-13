@@ -337,3 +337,56 @@ class HybridSegmentor(pl.LightningModule):
             },
         }
 
+class TransformerSegmentor(pl.LightningModule):
+    def __init__(self, channels=3, dims=(64, 256, 512, 1024), n_heads=(1, 2, 8, 8), 
+                 expansion=(8, 8, 4, 4), reduction_ratio=(8, 4, 2, 1), n_layers=(2, 2, 2, 2), 
+                 learning_rate=config.LEARNING_RATE):
+        super(TransformerSegmentor, self).__init__()
+        self.mix_transformer = MiT(channels, dims, n_heads, expansion, reduction_ratio, n_layers)
+        self.to_segment_conv = nn.Conv2d(dims[-1], 1, 1)  # Final segmentation layer
+        self.loss_fn = DiceBCELoss()
+        self.lr = learning_rate
+
+    def forward(self, x):
+        mit_outputs = self.mix_transformer(x)[-1]  # Use the last stage output
+        to_segment = self.to_segment_conv(mit_outputs)
+        return to_segment
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y = y.float().unsqueeze(1).to(config.DEVICE)
+        pred = self.forward(x)
+        loss = self.loss_fn(pred, y)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        return optimizer
+
+
+class CNNSegmentor(pl.LightningModule):
+    def __init__(self, learning_rate=config.LEARNING_RATE):
+        super(CNNSegmentor, self).__init__()
+        self.cnn_encoder = ResNetEncoder()
+        self.to_segment_conv = nn.Conv2d(2048, 1, 1)  # Final segmentation layer
+        self.loss_fn = DiceBCELoss()
+        self.lr = learning_rate
+
+    def forward(self, x):
+        _, _, _, _, cnn_output = self.cnn_encoder(x)  # Use the deepest CNN feature
+        to_segment = self.to_segment_conv(cnn_output)
+        return to_segment
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y = y.float().unsqueeze(1).to(config.DEVICE)
+        pred = self.forward(x)
+        loss = self.loss_fn(pred, y)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        return optimizer
+

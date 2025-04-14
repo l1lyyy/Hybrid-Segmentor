@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import config
 import torchvision
 from torchvision.models import resnet50, ResNet50_Weights
-from metric import DiceBCELoss, DiceLoss
+from metric import DiceBCELoss, DiceLoss, compute_dice_score
 import torchmetrics
 from torchmetrics.classification \
     import BinaryJaccardIndex, BinaryRecall, BinaryAccuracy, \
@@ -256,7 +256,7 @@ class HybridSegmentor(pl.LightningModule):
         re = self.recall(pred, y)
         precision = self.precision(pred, y)
         jaccard = self.jaccard_ind(pred, y)
-        dice_score = dice(pred, y.int())
+        dice_score = compute_dice_score(pred, y.int())  # Use custom Dice score
 
         self.log_dict({'train_loss': loss, 'train_accuracy': accuracy, 'train_f1_score': f1_score, 
                       'train_precision': precision,  'train_recall': re, 'train_IOU': jaccard, 'train_dice': dice_score},
@@ -276,7 +276,7 @@ class HybridSegmentor(pl.LightningModule):
         re = self.recall(pred, y)
         precision = self.precision(pred, y)
         jaccard = self.jaccard_ind(pred, y)
-        dice_score = dice(pred, y.int())
+        dice_score = compute_dice_score(pred, y.int())  # Use custom Dice score
 
         self.log_dict({'val_loss': loss, 'val_accuracy': accuracy, 'val_f1_score': f1_score, 
                       'val_precision': precision,  'val_recall': re, 'val_IOU': jaccard, 'val_dice': dice_score},
@@ -292,7 +292,7 @@ class HybridSegmentor(pl.LightningModule):
         re = self.recall(pred, y)
         precision = self.precision(pred, y)
         jaccard = self.jaccard_ind(pred, y)
-        dice_score = dice(pred, y.int())
+        dice_score = compute_dice_score(pred, y.int())  # Use custom Dice score
         self.log_dict({'test_loss': loss, 'test_accuracy': accuracy, 'test_f1_score': f1_score, 
                       'test_precision': precision,  'test_recall': re, 'test_IOU': jaccard, 'test_dice': dice_score},
                       on_step=False, on_epoch=True, prog_bar=False) 

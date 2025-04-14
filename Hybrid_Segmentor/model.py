@@ -18,7 +18,7 @@ from torchmetrics.classification import (
     BinaryJaccardIndex, BinaryRecall, BinaryAccuracy,
     BinaryPrecision, BinaryF1Score
 )
-from torchmetrics import DiceCoefficient
+from torchmetrics.classification import Dice as DiceCoefficient
 
 import numpy as np
 

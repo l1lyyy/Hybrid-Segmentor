@@ -13,13 +13,10 @@ import config
 import torchvision
 from torchvision.models import resnet50, ResNet50_Weights
 from metric import DiceBCELoss, DiceLoss
-
-from torchmetrics.classification import (
-    BinaryJaccardIndex, BinaryRecall, BinaryAccuracy,
-    BinaryPrecision, BinaryF1Score
-)
-from torchmetrics.classification import Dice as DiceCoefficient
-
+import torchmetrics
+from torchmetrics.classification \
+    import BinaryJaccardIndex, BinaryRecall, BinaryAccuracy, \
+        BinaryPrecision, BinaryF1Score, Dice
 import numpy as np
 
 
@@ -225,7 +222,7 @@ class HybridSegmentor(pl.LightningModule):
         
         # Overlapped area metrics (Ignore Backgrounds)
         self.jaccard_ind = BinaryJaccardIndex()
-        self.dice = DiceCoefficient()
+        self.dice = Dice()
 
         # LR
         self.lr = learning_rate

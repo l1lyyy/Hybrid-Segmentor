@@ -348,6 +348,13 @@ class TransformerSegmentor(pl.LightningModule):
         self.loss_fn = DiceBCELoss()
         self.lr = learning_rate
 
+        # Metrics
+        self.accuracy = BinaryAccuracy()
+        self.f1_score = BinaryF1Score()
+        self.recall = BinaryRecall()
+        self.precision = BinaryPrecision()
+        self.jaccard_ind = BinaryJaccardIndex()
+
     def forward(self, x):
         mit_outputs = self.mix_transformer(x)[-1]  # Use the last stage output
         to_segment = self.to_segment_conv(mit_outputs)
@@ -355,13 +362,53 @@ class TransformerSegmentor(pl.LightningModule):
         to_segment_resized = F.interpolate(to_segment, size=x.shape[2:], mode="bilinear", align_corners=True)
         return to_segment_resized
 
-    def training_step(self, batch, batch_idx):
+    def _common_step(self, batch):
         x, y = batch
         y = y.float().unsqueeze(1).to(config.DEVICE)
         pred = self.forward(x)
         loss = self.loss_fn(pred, y)
+        pred = torch.sigmoid(pred)
+        pred = (pred > 0.5).float()
+        return loss, pred, y
+
+    def training_step(self, batch, batch_idx):
+        loss, pred, y = self._common_step(batch)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        loss, pred, y = self._common_step(batch)
+        accuracy = self.accuracy(pred, y)
+        f1_score = self.f1_score(pred, y)
+        recall = self.recall(pred, y)
+        precision = self.precision(pred, y)
+        jaccard = self.jaccard_ind(pred, y)
+
+        self.log_dict({
+            "val_loss": loss,
+            "val_accuracy": accuracy,
+            "val_f1_score": f1_score,
+            "val_recall": recall,
+            "val_precision": precision,
+            "val_IOU": jaccard,
+        }, on_step=False, on_epoch=True, prog_bar=True)
+
+    def test_step(self, batch, batch_idx):
+        loss, pred, y = self._common_step(batch)
+        accuracy = self.accuracy(pred, y)
+        f1_score = self.f1_score(pred, y)
+        recall = self.recall(pred, y)
+        precision = self.precision(pred, y)
+        jaccard = self.jaccard_ind(pred, y)
+
+        self.log_dict({
+            "test_loss": loss,
+            "test_accuracy": accuracy,
+            "test_f1_score": f1_score,
+            "test_recall": recall,
+            "test_precision": precision,
+            "test_IOU": jaccard,
+        }, on_step=False, on_epoch=True, prog_bar=False)
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr)

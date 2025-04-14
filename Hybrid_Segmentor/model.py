@@ -364,7 +364,9 @@ class TransformerSegmentor(pl.LightningModule):
 
     def _common_step(self, batch):
         x, y = batch
-        y = y.float().unsqueeze(1).to(config.DEVICE)
+        y = y.float().unsqueeze(1).to(config.DEVICE)  # Ensure y has shape [B, 1, H, W]
+        if len(y.shape) == 5:  # Remove extra dimension if present
+            y = y.squeeze(2)
         pred = self.forward(x)
         loss = self.loss_fn(pred, y)
         pred = torch.sigmoid(pred)

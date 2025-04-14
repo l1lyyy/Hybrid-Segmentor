@@ -92,21 +92,5 @@ class FocalLoss(nn.Module):
         focal_loss = alpha * (1-BCE_EXP)**gamma * BCE
                        
         return focal_loss
-
-def compute_dice_score(preds, targets, smooth=1):
-    """
-    Compute Dice score between predictions and targets.
-    Args:
-        preds (torch.Tensor): Predicted binary mask.
-        targets (torch.Tensor): Ground truth binary mask.
-        smooth (float): Smoothing factor to avoid division by zero.
-    Returns:
-        float: Dice score.
-    """
-    preds = preds.view(-1)
-    targets = targets.view(-1)
-    intersection = (preds * targets).sum()
-    dice_score = (2. * intersection + smooth) / (preds.sum() + targets.sum() + smooth)
-    return dice_score
-
+    
 

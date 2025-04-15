@@ -428,7 +428,9 @@ class CNNSegmentor(pl.LightningModule):
     def forward(self, x):
         _, _, _, _, cnn_output = self.cnn_encoder(x)  # Use the deepest CNN feature
         to_segment = self.to_segment_conv(cnn_output)
-        return to_segment
+        # Resize output to match input size
+        to_segment_resized = F.interpolate(to_segment, size=x.shape[2:], mode="bilinear", align_corners=True)
+        return to_segment_resized
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -436,6 +438,22 @@ class CNNSegmentor(pl.LightningModule):
         pred = self.forward(x)
         loss = self.loss_fn(pred, y)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y = y.float().unsqueeze(1).to(config.DEVICE)
+        pred = self.forward(x)
+        loss = self.loss_fn(pred, y)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y = y.float().unsqueeze(1).to(config.DEVICE)
+        pred = self.forward(x)
+        loss = self.loss_fn(pred, y)
+        self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
     def configure_optimizers(self):

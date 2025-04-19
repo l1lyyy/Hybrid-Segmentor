@@ -2,17 +2,14 @@ import torch
 import os 
 
 # Huấn luyện từ tập dữ liệu đã copy từ Google Drive
-NUM_EPOCHS = 100 #50
+NUM_EPOCHS = 100  # Increase epochs for fine-tuning 50
 DATASET_SIZE = {'train' : 4800, 'val' : 600, 'test' : 600}
 # dataset = "/kaggle/input/crackvision6000/split_dataset_6000/"
 
-# Đảm bảo đường dẫn này trỏ đến vị trí chính xác của dữ liệu trên hệ thống của bạn
-dataset = r"C:\Users\minhn\Downloads\split_dataset_final" + "/"
-
+dataset = "/kaggle/input/crackvision12k/split_dataset_final/"
 #dataset = "C/Users/minhn/Downloads/split_dataset_final/"
 
-#LEARNING_RATE = 5e-5 #1e-4
-LEARNING_RATE = 5e-5  # Reduce learning rate for fine-tuning
+LEARNING_RATE = 5e-5  # Reduce learning rate for fine-tuning 1e-4
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 8
 NUM_WORKERS = 2

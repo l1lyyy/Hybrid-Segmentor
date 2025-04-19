@@ -416,13 +416,13 @@ class TransformerSegmentor(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=self.lr)  # Use AdamW optimizer for fine-tuning
-        lr_scheduler = lr_scheduler.ReduceLROnPlateau(
+        scheduler = lr_scheduler.ReduceLROnPlateau(  # Rename local variable to avoid conflict
             optimizer, mode="min", factor=self.lr_scheduler_factor, patience=self.lr_scheduler_patience
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
-                "scheduler": lr_scheduler,
+                "scheduler": scheduler,  # Use the renamed variable
                 "monitor": "val_loss",  # Monitor validation loss for LR adjustment
             },
         }
@@ -469,5 +469,14 @@ class CNNSegmentor(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        return optimizer
+        scheduler = lr_scheduler.ReduceLROnPlateau(  # Rename local variable to avoid conflict
+            optimizer, mode="min", factor=0.5, patience=5
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,  # Use the renamed variable
+                "monitor": "val_loss",  # Monitor validation loss for LR adjustment
+        } 
+    },            
 

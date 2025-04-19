@@ -2,7 +2,7 @@ import torch
 import os 
 
 # Huấn luyện từ tập dữ liệu đã copy từ Google Drive
-NUM_EPOCHS = 50
+NUM_EPOCHS = 100
 DATASET_SIZE = {'train' : 4800, 'val' : 600, 'test' : 600}
 # dataset = "/kaggle/input/crackvision6000/split_dataset_6000/"
 

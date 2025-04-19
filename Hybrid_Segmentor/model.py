@@ -347,6 +347,8 @@ class TransformerSegmentor(pl.LightningModule):
         self.to_segment_conv = nn.Conv2d(dims[-1], 1, 1)  # Final segmentation layer
         self.loss_fn = DiceBCELoss()
         self.lr = learning_rate
+        self.lr_scheduler_patience = 5  # Add patience for learning rate scheduler
+        self.lr_scheduler_factor = 0.5  # Reduce LR by this factor when plateauing
 
         # Metrics
         self.accuracy = BinaryAccuracy()
@@ -413,8 +415,17 @@ class TransformerSegmentor(pl.LightningModule):
         }, on_step=False, on_epoch=True, prog_bar=False)
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        return optimizer
+        optimizer = optim.AdamW(self.parameters(), lr=self.lr)  # Use AdamW optimizer for fine-tuning
+        lr_scheduler = lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=self.lr_scheduler_factor, patience=self.lr_scheduler_patience
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": lr_scheduler,
+                "monitor": "val_loss",  # Monitor validation loss for LR adjustment
+            },
+        }
 
 
 class CNNSegmentor(pl.LightningModule):
